@@ -4,6 +4,17 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#fff8f3"><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
 <title>Casa Familiare</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = 'https://rrapnzzfedfeiyzzxsan.supabase.co';
+  const SUPABASE_ANON_KEY = 'INCOLLA_QUI_LA_TUA_ANON_KEY';
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+</script>
 </head>
 <body>
 <header class="topbar"><div><p class="eyebrow">LA NOSTRA CASA</p><h1>Casa Familiare <span>♥</span></h1></div><button class="icon-btn" id="todayBtn">Oggi</button></header>
