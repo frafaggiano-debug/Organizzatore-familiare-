@@ -1,111 +1,1452 @@
-/* ===== AUTENTICAZIONE SUPABASE ===== */
-document.body.style.visibility = "hidden";
-const authBox = document.createElement("div");
-authBox.id = "authBox";
-authBox.style.cssText = `
-  position:fixed;
-  inset:0;
-  background:#f8f5f2;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:99999;
-  font-family:Arial,sans-serif;
-`;
-authBox.innerHTML = `
-  <div style="
-    width:min(90%,380px);
-    background:white;
-    padding:32px;
-    border-radius:20px;
-    box-shadow:0 8px 30px rgba(0,0,0,.10);
-    text-align:center;
-  ">
-    <h1 style="margin-top:0">Casa Familiare</h1>
-    <p>Accedi per entrare nell'app</p>
-    <input id="authEmail" type="email"
-      placeholder="Email"
-      style="width:100%;box-sizing:border-box;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
-    <input id="authPassword" type="password"
-      placeholder="Password"
-      style="width:100%;box-sizing:border-box;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
-    <button id="authLogin"
-      style="width:100%;padding:13px;margin-top:12px;border:0;border-radius:10px;background:#7ea8d8;color:white;font-size:16px;cursor:pointer">
-      Accedi
-    </button>
-    <p id="authMessage" style="margin-top:15px;font-size:14px"></p>
-  </div>
-`;
-document.body.appendChild(authBox);
-async function checkAuth() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
-    authBox.remove();
-    document.body.style.visibility = "visible";
+/* =========================================================
+   CASA FAMILIARE
+   App principale
+   ========================================================= */
+
+
+/* =========================================================
+   AUTENTICAZIONE SUPABASE
+   ========================================================= */
+
+async function initAuth() {
+
+  const { data, error } = await supabaseClient.auth.getSession();
+
+  if (error) {
+    console.error("Errore controllo sessione:", error);
+    showLogin();
+    return;
+  }
+
+  if (data.session) {
+    // Utente già autenticato
     renderAll();
   } else {
-    document.body.style.visibility = "visible";
-    authBox.style.display = "flex";
+    // Nessun utente autenticato
+    showLogin();
   }
 }
-document.getElementById("authLogin").onclick = async () => {
-  const email = document.getElementById("authEmail").value.trim();
-  const password = document.getElementById("authPassword").value;
+
+
+/* =========================================================
+   SCHERMATA LOGIN
+   ========================================================= */
+
+function showLogin() {
+
+  document.body.style.visibility = "visible";
+
+  // Evita di creare due volte la schermata
+  if (document.getElementById("authBox")) return;
+
+  const authBox = document.createElement("div");
+
+  authBox.id = "authBox";
+
+  authBox.style.cssText = `
+    position:fixed;
+    inset:0;
+    background:#f8f5f2;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+    font-family:Arial,sans-serif;
+  `;
+
+  authBox.innerHTML = `
+    <div style="
+      width:min(90%,380px);
+      background:white;
+      padding:32px;
+      border-radius:20px;
+      box-shadow:0 8px 30px rgba(0,0,0,.10);
+      text-align:center;
+      box-sizing:border-box;
+    ">
+
+      <h1 style="
+        margin-top:0;
+        margin-bottom:8px;
+      ">
+        Casa Familiare
+      </h1>
+
+      <p style="
+        color:#666;
+        margin-bottom:22px;
+      ">
+        Accedi per entrare nell'app
+      </p>
+
+      <input
+        id="authEmail"
+        type="email"
+        placeholder="Email"
+        autocomplete="email"
+        style="
+          width:100%;
+          box-sizing:border-box;
+          padding:13px;
+          margin:8px 0;
+          border:1px solid #ddd;
+          border-radius:10px;
+          font-size:15px;
+        "
+      >
+
+      <input
+        id="authPassword"
+        type="password"
+        placeholder="Password"
+        autocomplete="current-password"
+        style="
+          width:100%;
+          box-sizing:border-box;
+          padding:13px;
+          margin:8px 0;
+          border:1px solid #ddd;
+          border-radius:10px;
+          font-size:15px;
+        "
+      >
+
+      <button
+        id="authLogin"
+        style="
+          width:100%;
+          padding:13px;
+          margin-top:12px;
+          border:0;
+          border-radius:10px;
+          background:#7ea8d8;
+          color:white;
+          font-size:16px;
+          cursor:pointer;
+        "
+      >
+        Accedi
+      </button>
+
+      <p
+        id="authMessage"
+        style="
+          margin-top:15px;
+          font-size:14px;
+          min-height:20px;
+        "
+      ></p>
+
+    </div>
+  `;
+
+  document.body.appendChild(authBox);
+
+  const emailInput = document.getElementById("authEmail");
+  const passwordInput = document.getElementById("authPassword");
+  const loginButton = document.getElementById("authLogin");
   const message = document.getElementById("authMessage");
 
-  if (!email || !password) {
-    message.textContent = "Inserisci email e password.";
-    return;
+  async function login() {
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+      message.textContent = "Inserisci email e password.";
+      return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.textContent = "Accesso in corso...";
+    message.textContent = "";
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+
+      console.error("Errore login:", error);
+
+      message.textContent =
+        "Email o password non corrette.";
+
+      loginButton.disabled = false;
+      loginButton.textContent = "Accedi";
+
+      return;
+    }
+
+    authBox.remove();
+
+    renderAll();
   }
-  message.textContent = "Accesso in corso...";
-  const { error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password
+
+  loginButton.addEventListener("click", login);
+
+  passwordInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      login();
+    }
   });
-  if (error) {
-    message.textContent = "Email o password non corrette.";
-    console.error(error);
-    return;
+
+  emailInput.addEventListener("keydown", function(event) {
+    if (event.key === "Enter") {
+      login();
+    }
+  });
+}
+
+
+/* =========================================================
+   PERSONE DELLA FAMIGLIA
+   ========================================================= */
+
+const PEOPLE = {
+  francesca: {
+    name: "Francesca",
+    color: "#e98b96"
+  },
+
+  alessio: {
+    name: "Alessio",
+    color: "#7ea8d8"
+  },
+
+  sara: {
+    name: "Sara",
+    color: "#e99bc1"
+  },
+
+  vera: {
+    name: "Vera",
+    color: "#82bd96"
+  },
+
+  famiglia: {
+    name: "Famiglia",
+    color: "#aa8bc9"
   }
-  authBox.remove();
-  document.body.style.visibility = "visible";
-  renderAll();
 };
-checkAuth();
-/* ===== FINE AUTENTICAZIONE ===== */
-const PEOPLE={francesca:{name:"Francesca",color:"#e98b96"},alessio:{name:"Alessio",color:"#7ea8d8"},sara:{name:"Sara",color:"#e99bc1"},vera:{name:"Vera",color:"#82bd96"},famiglia:{name:"Famiglia",color:"#aa8bc9"}};
-const SHOP_CATS=["dispensa","frutta e verdura","banco frigo","surgelati","farmaci","detersivi","macelleria","salumeria","pescheria"],DAYS=["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"],FMEALS=["Colazione","Spuntino","Pranzo","Merenda","Cena"],FKEY=["colazione","spuntino","pranzo","merenda","cena"],AKEY=["pranzo","cena"];
-const KEY="casa_familiare_v1";let state=JSON.parse(localStorage.getItem(KEY)||"null")||{menus:{},shopping:{},events:[],notes:[],recipes:[]},menuOffset=0,shopOffset=0,calDate=new Date();
-const save=()=>localStorage.setItem(KEY,JSON.stringify(state)),iso=d=>d.toISOString().slice(0,10);
-function startOfWeek(d){let x=new Date(d);x.setHours(12,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x}
-function weekKey(o=0){let d=startOfWeek(new Date);d.setDate(d.getDate()+o*7);return iso(d)}
-function fmtWeek(k){let d=new Date(k+"T12:00:00"),e=new Date(d);e.setDate(e.getDate()+6);return d.toLocaleDateString("it-IT",{day:"numeric",month:"short"})+" – "+e.toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"})}
-function fmtDate(k){return new Date(k+"T12:00:00").toLocaleDateString("it-IT",{day:"numeric",month:"long"})}
-function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function ensure(k){if(!state.menus[k])state.menus[k]={};if(!state.shopping[k])state.shopping[k]=[]}
-function show(s){document.querySelectorAll(".screen").forEach(x=>x.classList.toggle("active",x.id===s));document.querySelectorAll(".nav-item").forEach(x=>x.classList.toggle("active",x.dataset.go===s));renderAll();window.scrollTo({top:0,behavior:"smooth"})}
-document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
-document.getElementById("todayBtn").onclick=()=>{menuOffset=shopOffset=0;show("home")};
 
-function renderHome(){const wk=weekKey();document.getElementById("homeWeek").textContent=fmtWeek(wk);const today=new Date,day=(today.getDay()+6)%7,m=state.menus[wk]||{},vals=[];["francesca","alessio","sara","vera"].forEach(p=>Object.values(m[p+"_"+day]||{}).forEach(v=>v&&vals.push(v)));document.getElementById("todayMenuSummary").textContent=vals.length?vals.slice(0,2).join(" · "):"Nessun menu inserito";const sh=state.shopping[wk]||[];document.getElementById("shoppingSummary").textContent=sh.length?sh.filter(x=>!x.done).length+" da acquistare":"Lista vuota";const f=state.events.filter(e=>e.date>=iso(today)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));document.getElementById("eventsSummary").textContent=f.length?fmtDate(f[0].date)+(f[0].time?" · "+f[0].time:""):"Nessun impegno";document.getElementById("notesSummary").textContent=state.notes.filter(n=>!n.done).length+" note da ricordare"}
-function renderMenu(){const k=weekKey(menuOffset);ensure(k);document.getElementById("menuWeekLabel").textContent=fmtWeek(k);let h="";[["francesca","Francesca",FMEALS,FKEY],["alessio","Alessio",["Pranzo","Cena"],AKEY],["sara","Sara",["Pranzo","Cena"],AKEY],["vera","Vera",["Pranzo","Cena"],AKEY]].forEach(([p,n,meals,keys])=>{h+=`<div class="menu-person"><div class="person-title"><i class="dot" style="background:${PEOPLE[p].color}"></i><h3>${n}</h3></div>`;for(let i=0;i<7;i++){let o=state.menus[k][p+"_"+i]||{};h+=`<div class="menu-day"><div class="day-name">${DAYS[i]}</div>`;meals.forEach((meal,j)=>h+=`<div class="meal-line"><span class="meal-label">${meal}</span><input class="meal-input" data-p="${p}" data-d="${i}" data-m="${keys[j]}" value="${esc(o[keys[j]]||"")}" placeholder="…"></div>`);h+="</div>"}h+="</div>"});document.getElementById("menuContent").innerHTML=h;document.querySelectorAll(".meal-input").forEach(i=>i.oninput=e=>{let k=weekKey(menuOffset),id=e.target.dataset.p+"_"+e.target.dataset.d,o=state.menus[k][id]||{};o[e.target.dataset.m]=e.target.value;state.menus[k][id]=o;save();renderHome()})}
-document.getElementById("menuPrev").onclick=()=>{menuOffset--;renderMenu()};document.getElementById("menuNext").onclick=()=>{menuOffset++;renderMenu()};document.getElementById("copyMenuBtn").onclick=()=>{let k=weekKey(menuOffset),p=weekKey(menuOffset-1);if(!state.menus[p])return alert("La settimana precedente è vuota.");state.menus[k]=JSON.parse(JSON.stringify(state.menus[p]));save();renderMenu()};
 
-function renderShopping(){const k=weekKey(shopOffset);ensure(k);document.getElementById("shopWeekLabel").textContent=fmtWeek(k);let h="";SHOP_CATS.forEach(cat=>{let a=state.shopping[k].filter(x=>x.cat===cat);h+=`<div class="shop-category"><h3>${cat}</h3>`;if(!a.length)h+=`<div class="recipe-meta">Nessun prodotto</div>`;a.forEach(x=>h+=`<div class="shop-item ${x.done?"done":""}"><input type="checkbox" ${x.done?"checked":""} data-id="${x.id}"><span>${esc(x.text)}</span><button class="delete" data-del="${x.id}">×</button></div>`);h+="</div>"});document.getElementById("shoppingContent").innerHTML=h;document.querySelectorAll("[data-id]").forEach(c=>c.onchange=()=>{state.shopping[k].find(x=>x.id===c.dataset.id).done=c.checked;save();renderShopping();renderHome()});document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{state.shopping[k]=state.shopping[k].filter(x=>x.id!==b.dataset.del);save();renderShopping();renderHome()})}
-document.getElementById("shopPrev").onclick=()=>{shopOffset--;renderShopping()};document.getElementById("shopNext").onclick=()=>{shopOffset++;renderShopping()};document.getElementById("shoppingCategory").innerHTML=SHOP_CATS.map(x=>`<option>${x}</option>`).join("");
-document.getElementById("addShoppingBtn").onclick=()=>{let i=document.getElementById("shoppingInput"),c=document.getElementById("shoppingCategory").value;if(!i.value.trim())return;let k=weekKey(shopOffset);ensure(k);state.shopping[k].push({id:crypto.randomUUID(),text:i.value.trim(),cat:c,done:false});i.value="";save();renderShopping();renderHome()};
-document.getElementById("clearBoughtBtn").onclick=()=>{let k=weekKey(shopOffset);state.shopping[k]=(state.shopping[k]||[]).filter(x=>!x.done);save();renderShopping();renderHome()};
-document.getElementById("copyShoppingBtn").onclick=()=>{let k=weekKey(shopOffset),p=weekKey(shopOffset-1),a=state.shopping[p]||[];if(!a.length)return alert("La settimana precedente è vuota.");state.shopping[k]=a.map(x=>({...x,id:crypto.randomUUID(),done:false}));save();renderShopping();renderHome()};
+/* =========================================================
+   COSTANTI
+   ========================================================= */
 
-function renderCalendar(){let y=calDate.getFullYear(),m=calDate.getMonth();document.getElementById("calendarTitle").textContent=new Date(y,m,1).toLocaleDateString("it-IT",{month:"long",year:"numeric"});document.getElementById("legend").innerHTML=Object.values(PEOPLE).map(p=>`<span><i style="background:${p.color}"></i>${p.name}</span>`).join("");let first=new Date(y,m,1),start=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate(),pd=new Date(y,m,0).getDate(),today=iso(new Date),h="";for(let i=0;i<42;i++){let n=i-start+1,dt,muted=false;if(n<1){dt=new Date(y,m-1,pd+n);muted=true}else if(n>days){dt=new Date(y,m+1,n-days);muted=true}else dt=new Date(y,m,n);let k=iso(dt),ev=state.events.filter(e=>e.date===k);h+=`<div class="calendar-cell ${muted?"muted":""} ${k===today?"today":""}"><div class="calendar-num">${dt.getDate()}</div>${ev.slice(0,3).map(e=>`<span class="event-chip" style="background:${PEOPLE[e.person].color}33">${esc(e.title)}</span>`).join("")}</div>`}document.getElementById("calendarGrid").innerHTML=h;let me=state.events.filter(e=>{let d=new Date(e.date+"T12:00:00");return d.getFullYear()===y&&d.getMonth()===m}).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));document.getElementById("eventList").innerHTML=me.length?me.map(e=>`<div class="event-card"><div class="event-bar" style="background:${PEOPLE[e.person].color}"></div><div style="flex:1"><strong>${esc(e.title)}</strong><small>${PEOPLE[e.person].name} · ${fmtDate(e.date)}${e.time?" · "+e.time:""}</small>${e.note?`<div class="recipe-preview">${esc(e.note)}</div>`:""}</div><button class="delete" data-event="${e.id}">×</button></div>`).join(""):`<p class="recipe-meta">Nessun impegno questo mese.</p>`;document.querySelectorAll("[data-event]").forEach(b=>b.onclick=()=>{state.events=state.events.filter(e=>e.id!==b.dataset.event);save();renderCalendar();renderHome()})}
-document.getElementById("calPrev").onclick=()=>{calDate.setMonth(calDate.getMonth()-1);renderCalendar()};document.getElementById("calNext").onclick=()=>{calDate.setMonth(calDate.getMonth()+1);renderCalendar()};
-document.getElementById("addEventBtn").onclick=()=>{document.getElementById("modalCard").innerHTML=`<h2>Nuovo impegno</h2><div class="form-grid"><select id="eventPerson">${Object.entries(PEOPLE).map(([k,p])=>`<option value="${k}">${p.name}</option>`).join("")}</select><input id="eventTitle" placeholder="Titolo dell'impegno"><input id="eventDate" type="date" value="${iso(new Date)}"><input id="eventTime" type="time"><textarea id="eventNote" placeholder="Nota (facoltativa)"></textarea></div><div class="modal-actions"><button class="secondary-btn" id="closeModal">Annulla</button><button class="primary-btn" id="saveEvent">Salva</button></div>`;openModal();document.getElementById("closeModal").onclick=closeModal;document.getElementById("saveEvent").onclick=()=>{let title=document.getElementById("eventTitle").value.trim(),date=document.getElementById("eventDate").value;if(!title||!date)return;state.events.push({id:crypto.randomUUID(),person:document.getElementById("eventPerson").value,title,date,time:document.getElementById("eventTime").value,note:document.getElementById("eventNote").value.trim()});save();closeModal();renderCalendar();renderHome()}};
+const SHOP_CATS = [
+  "dispensa",
+  "frutta e verdura",
+  "banco frigo",
+  "surgelati",
+  "farmaci",
+  "detersivi",
+  "macelleria",
+  "salumeria",
+  "pescheria"
+];
 
-function renderNotes(){document.getElementById("notesContent").innerHTML=state.notes.length?state.notes.map(n=>`<div class="note-card ${n.done?"done":""}"><input type="checkbox" ${n.done?"checked":""} data-note="${n.id}"><span style="flex:1">${esc(n.text)}</span><button class="delete" data-note-del="${n.id}">×</button></div>`).join(""):`<p class="recipe-meta">Ancora nessuna nota.</p>`;document.querySelectorAll("[data-note]").forEach(x=>x.onchange=()=>{state.notes.find(n=>n.id===x.dataset.note).done=x.checked;save();renderNotes();renderHome()});document.querySelectorAll("[data-note-del]").forEach(x=>x.onclick=()=>{state.notes=state.notes.filter(n=>n.id!==x.dataset.noteDel);save();renderNotes();renderHome()})}
-document.getElementById("addNoteBtn").onclick=()=>{let i=document.getElementById("noteInput");if(!i.value.trim())return;state.notes.unshift({id:crypto.randomUUID(),text:i.value.trim(),done:false});i.value="";save();renderNotes();renderHome()};
-function renderRecipes(){let q=document.getElementById("recipeSearch").value.toLowerCase(),a=state.recipes.filter(r=>(r.name+" "+r.category+" "+r.ingredients).toLowerCase().includes(q));document.getElementById("recipesContent").innerHTML=a.length?a.map(r=>`<div class="recipe-card"><h3>${esc(r.name)}</h3><div class="recipe-meta">${esc(r.category||"Ricetta")}</div><div class="recipe-preview"><b>Ingredienti:</b> ${esc(r.ingredients)}${r.steps?`
+const DAYS = [
+  "Lunedì",
+  "Martedì",
+  "Mercoledì",
+  "Giovedì",
+  "Venerdì",
+  "Sabato",
+  "Domenica"
+];
 
-<b>Preparazione:</b> ${esc(r.steps)}`:""}</div><button class="delete" data-recipe="${r.id}">Elimina</button></div>`).join(""):`<p class="recipe-meta">Nessuna ricetta${q?" trovata":""}.</p>`;document.querySelectorAll("[data-recipe]").forEach(x=>x.onclick=()=>{state.recipes=state.recipes.filter(r=>r.id!==x.dataset.recipe);save();renderRecipes()})}
-document.getElementById("recipeSearch").oninput=renderRecipes;document.getElementById("addRecipeBtn").onclick=()=>{document.getElementById("modalCard").innerHTML=`<h2>Nuova ricetta</h2><div class="form-grid"><input id="recipeName" placeholder="Nome ricetta"><input id="recipeCat" placeholder="Categoria"><textarea id="recipeIng" placeholder="Ingredienti"></textarea><textarea id="recipeSteps" placeholder="Preparazione"></textarea></div><div class="modal-actions"><button class="secondary-btn" id="closeModal">Annulla</button><button class="primary-btn" id="saveRecipe">Salva</button></div>`;openModal();document.getElementById("closeModal").onclick=closeModal;document.getElementById("saveRecipe").onclick=()=>{let n=document.getElementById("recipeName").value.trim();if(!n)return;state.recipes.unshift({id:crypto.randomUUID(),name:n,category:document.getElementById("recipeCat").value.trim(),ingredients:document.getElementById("recipeIng").value.trim(),steps:document.getElementById("recipeSteps").value.trim()});save();closeModal();renderRecipes()}};
-function openModal(){document.getElementById("modal").classList.remove("hidden")}function closeModal(){document.getElementById("modal").classList.add("hidden")}document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")closeModal()};
-function renderAll(){renderHome();renderMenu();renderShopping();renderCalendar();renderNotes();renderRecipes()}if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("service-worker.js").catch(()=>{}));renderAll();
+const FMEALS = [
+  "Colazione",
+  "Spuntino",
+  "Pranzo",
+  "Merenda",
+  "Cena"
+];
+
+const FKEY = [
+  "colazione",
+  "spuntino",
+  "pranzo",
+  "merenda",
+  "cena"
+];
+
+const AKEY = [
+  "pranzo",
+  "cena"
+];
+
+
+/* =========================================================
+   STATO APP
+   ========================================================= */
+
+const KEY = "casa_familiare_v1";
+
+let state =
+  JSON.parse(localStorage.getItem(KEY) || "null")
+  ||
+  {
+    menus: {},
+    shopping: {},
+    events: [],
+    notes: [],
+    recipes: []
+  };
+
+let menuOffset = 0;
+let shopOffset = 0;
+let calDate = new Date();
+
+
+/* =========================================================
+   SALVATAGGIO LOCALE
+   ========================================================= */
+
+const save = () => {
+  localStorage.setItem(
+    KEY,
+    JSON.stringify(state)
+  );
+};
+
+
+/* =========================================================
+   FUNZIONI DATE
+   ========================================================= */
+
+const iso = d =>
+  d.toISOString().slice(0, 10);
+
+
+/* =========================================================
+   HOME
+   ========================================================= */
+
+function renderHome() {
+
+  const el = document.getElementById("home");
+
+  if (!el) return;
+
+  el.innerHTML = `
+    <div class="home-grid">
+
+      <button class="home-card" data-go="menu">
+        <div class="home-icon">🍽️</div>
+        <div class="home-title">Menu settimanale</div>
+        <div class="home-text">
+          Organizza i pasti della famiglia
+        </div>
+      </button>
+
+      <button class="home-card" data-go="shopping">
+        <div class="home-icon">🛒</div>
+        <div class="home-title">Lista della spesa</div>
+        <div class="home-text">
+          Tutto quello che serve
+        </div>
+      </button>
+
+      <button class="home-card" data-go="calendar">
+        <div class="home-icon">📅</div>
+        <div class="home-title">Calendario</div>
+        <div class="home-text">
+          Impegni e appuntamenti
+        </div>
+      </button>
+
+      <button class="home-card" data-go="notes">
+        <div class="home-icon">📝</div>
+        <div class="home-title">Note</div>
+        <div class="home-text">
+          Idee e promemoria
+        </div>
+      </button>
+
+      <button class="home-card" data-go="recipes">
+        <div class="home-icon">📖</div>
+        <div class="home-title">Ricette</div>
+        <div class="home-text">
+          Le ricette della famiglia
+        </div>
+      </button>
+
+    </div>
+  `;
+
+  el.querySelectorAll("[data-go]").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+      const target = button.dataset.go;
+
+      document
+        .querySelectorAll(".page")
+        .forEach(page => page.classList.remove("active"));
+
+      const page = document.getElementById(target);
+
+      if (page) {
+        page.classList.add("active");
+      }
+
+    });
+
+  });
+}
+
+
+/* =========================================================
+   MENU
+   ========================================================= */
+
+function renderMenu() {
+
+  const el = document.getElementById("menu");
+
+  if (!el) return;
+
+  const today = new Date();
+
+  const monday = new Date(today);
+
+  const day = monday.getDay();
+
+  const diff = day === 0 ? -6 : 1 - day;
+
+  monday.setDate(monday.getDate() + diff);
+
+  monday.setDate(
+    monday.getDate() + menuOffset * 7
+  );
+
+  let html = `
+    <div class="section-header">
+
+      <button id="menuPrev">‹</button>
+
+      <h2>
+        Menu settimanale
+      </h2>
+
+      <button id="menuNext">›</button>
+
+    </div>
+
+    <div class="menu-grid">
+  `;
+
+  DAYS.forEach((dayName, index) => {
+
+    const date = new Date(monday);
+
+    date.setDate(
+      monday.getDate() + index
+    );
+
+    const dateKey = iso(date);
+
+    const menu =
+      state.menus[dateKey] || {};
+
+    html += `
+      <div class="menu-day">
+
+        <div class="menu-day-title">
+          ${dayName}
+          <span>
+            ${date.getDate()}/${date.getMonth() + 1}
+          </span>
+        </div>
+    `;
+
+    FMEALS.forEach((meal, mealIndex) => {
+
+      const key = FKEY[mealIndex];
+
+      html += `
+        <div class="meal-row">
+
+          <div class="meal-name">
+            ${meal}
+          </div>
+
+          <input
+            class="menu-input"
+            data-date="${dateKey}"
+            data-meal="${key}"
+            value="${escapeHtml(menu[key] || "")}"
+            placeholder="Inserisci..."
+          >
+
+        </div>
+      `;
+
+    });
+
+    html += `
+      </div>
+    `;
+
+  });
+
+  html += `
+    </div>
+  `;
+
+  el.innerHTML = html;
+
+  document
+    .getElementById("menuPrev")
+    ?.addEventListener("click", () => {
+
+      menuOffset--;
+      renderMenu();
+
+    });
+
+  document
+    .getElementById("menuNext")
+    ?.addEventListener("click", () => {
+
+      menuOffset++;
+      renderMenu();
+
+    });
+
+  el
+    .querySelectorAll(".menu-input")
+    .forEach(input => {
+
+      input.addEventListener("change", () => {
+
+        const date = input.dataset.date;
+        const meal = input.dataset.meal;
+
+        if (!state.menus[date]) {
+          state.menus[date] = {};
+        }
+
+        state.menus[date][meal] =
+          input.value.trim();
+
+        save();
+
+      });
+
+    });
+
+}
+
+
+/* =========================================================
+   LISTA DELLA SPESA
+   ========================================================= */
+
+function renderShopping() {
+
+  const el = document.getElementById("shopping");
+
+  if (!el) return;
+
+  let html = `
+    <div class="section-header">
+
+      <button id="shopPrev">‹</button>
+
+      <h2>
+        Lista della spesa
+      </h2>
+
+      <button id="shopNext">›</button>
+
+    </div>
+
+    <div class="shopping-container">
+  `;
+
+  SHOP_CATS.forEach(cat => {
+
+    const items =
+      state.shopping[cat] || [];
+
+    html += `
+      <section class="shopping-category">
+
+        <h3>
+          ${capitalize(cat)}
+        </h3>
+
+        <div class="shopping-add">
+
+          <input
+            id="shopInput-${cat}"
+            placeholder="Aggiungi prodotto..."
+          >
+
+          <button
+            data-add-shop="${cat}"
+          >
+            +
+          </button>
+
+        </div>
+
+        <div class="shopping-items">
+    `;
+
+    if (!items.length) {
+
+      html += `
+        <div class="empty-message">
+          Nessun prodotto
+        </div>
+      `;
+
+    }
+
+    items.forEach((item, index) => {
+
+      html += `
+        <div class="shopping-item">
+
+          <label>
+
+            <input
+              type="checkbox"
+              data-shop-check="${cat}"
+              data-index="${index}"
+              ${item.done ? "checked" : ""}
+            >
+
+            <span class="${item.done ? "done" : ""}">
+              ${escapeHtml(item.name)}
+            </span>
+
+          </label>
+
+          <button
+            data-shop-delete="${cat}"
+            data-index="${index}"
+          >
+            ×
+          </button>
+
+        </div>
+      `;
+
+    });
+
+    html += `
+        </div>
+
+      </section>
+    `;
+
+  });
+
+  html += `
+    </div>
+  `;
+
+  el.innerHTML = html;
+
+
+  /* Aggiunta prodotto */
+
+  el
+    .querySelectorAll("[data-add-shop]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const cat =
+          button.dataset.addShop;
+
+        const input =
+          document.getElementById(
+            `shopInput-${cat}`
+          );
+
+        if (!input.value.trim()) return;
+
+        if (!state.shopping[cat]) {
+          state.shopping[cat] = [];
+        }
+
+        state.shopping[cat].push({
+          name: input.value.trim(),
+          done: false
+        });
+
+        input.value = "";
+
+        save();
+        renderShopping();
+
+      });
+
+    });
+
+
+  /* Checkbox */
+
+  el
+    .querySelectorAll("[data-shop-check]")
+    .forEach(check => {
+
+      check.addEventListener("change", () => {
+
+        const cat =
+          check.dataset.shopCheck;
+
+        const index =
+          Number(check.dataset.index);
+
+        state.shopping[cat][index].done =
+          check.checked;
+
+        save();
+
+        renderShopping();
+
+      });
+
+    });
+
+
+  /* Eliminazione */
+
+  el
+    .querySelectorAll("[data-shop-delete]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const cat =
+          button.dataset.shopDelete;
+
+        const index =
+          Number(button.dataset.index);
+
+        state.shopping[cat].splice(index, 1);
+
+        save();
+
+        renderShopping();
+
+      });
+
+    });
+
+
+  document
+    .getElementById("shopPrev")
+    ?.addEventListener("click", () => {
+
+      shopOffset--;
+      renderShopping();
+
+    });
+
+  document
+    .getElementById("shopNext")
+    ?.addEventListener("click", () => {
+
+      shopOffset++;
+      renderShopping();
+
+    });
+
+}
+
+
+/* =========================================================
+   CALENDARIO
+   ========================================================= */
+
+function renderCalendar() {
+
+  const el =
+    document.getElementById("calendar");
+
+  if (!el) return;
+
+  const year =
+    calDate.getFullYear();
+
+  const month =
+    calDate.getMonth();
+
+  const first =
+    new Date(year, month, 1);
+
+  const last =
+    new Date(year, month + 1, 0);
+
+  const monthName =
+    first.toLocaleDateString(
+      "it-IT",
+      {
+        month: "long",
+        year: "numeric"
+      }
+    );
+
+  let html = `
+    <div class="section-header">
+
+      <button id="calPrev">‹</button>
+
+      <h2>
+        ${capitalize(monthName)}
+      </h2>
+
+      <button id="calNext">›</button>
+
+    </div>
+
+    <div class="calendar-grid">
+  `;
+
+  const startDay =
+    first.getDay() === 0
+      ? 6
+      : first.getDay() - 1;
+
+  for (let i = 0; i < startDay; i++) {
+
+    html += `
+      <div class="calendar-empty"></div>
+    `;
+
+  }
+
+  for (
+    let day = 1;
+    day <= last.getDate();
+    day++
+  ) {
+
+    const date =
+      new Date(year, month, day);
+
+    const dateKey =
+      iso(date);
+
+    const events =
+      state.events.filter(
+        event => event.date === dateKey
+      );
+
+    html += `
+      <div class="calendar-day">
+
+        <div class="calendar-day-number">
+          ${day}
+        </div>
+
+        <div class="calendar-events">
+    `;
+
+    events.forEach((event, index) => {
+
+      const person =
+        PEOPLE[event.person] ||
+        PEOPLE.famiglia;
+
+      html += `
+        <div
+          class="calendar-event"
+          style="border-left:4px solid ${person.color}"
+        >
+
+          <strong>
+            ${escapeHtml(event.title)}
+          </strong>
+
+          ${
+            event.time
+              ? `<small>${escapeHtml(event.time)}</small>`
+              : ""
+          }
+
+          <span>
+            ${person.name}
+          </span>
+
+          <button
+            data-delete-event="${event.id}"
+          >
+            ×
+          </button>
+
+        </div>
+      `;
+
+    });
+
+    html += `
+        </div>
+
+        <button
+          class="add-event"
+          data-add-event="${dateKey}"
+        >
+          +
+        </button>
+
+      </div>
+    `;
+
+  }
+
+  html += `
+    </div>
+
+    <div class="calendar-form">
+
+      <h3>
+        Aggiungi impegno
+      </h3>
+
+      <input
+        id="eventTitle"
+        placeholder="Titolo"
+      >
+
+      <input
+        id="eventDate"
+        type="date"
+      >
+
+      <input
+        id="eventTime"
+        type="time"
+      >
+
+      <select id="eventPerson">
+
+        <option value="famiglia">
+          Famiglia
+        </option>
+
+        <option value="alessio">
+          Alessio
+        </option>
+
+        <option value="francesca">
+          Francesca
+        </option>
+
+        <option value="sara">
+          Sara
+        </option>
+
+        <option value="vera">
+          Vera
+        </option>
+
+      </select>
+
+      <button id="addEventButton">
+        Aggiungi
+      </button>
+
+    </div>
+  `;
+
+  el.innerHTML = html;
+
+
+  /* Navigazione mese */
+
+  document
+    .getElementById("calPrev")
+    ?.addEventListener("click", () => {
+
+      calDate.setMonth(
+        calDate.getMonth() - 1
+      );
+
+      renderCalendar();
+
+    });
+
+  document
+    .getElementById("calNext")
+    ?.addEventListener("click", () => {
+
+      calDate.setMonth(
+        calDate.getMonth() + 1
+      );
+
+      renderCalendar();
+
+    });
+
+
+  /* Data predefinita */
+
+  const eventDate =
+    document.getElementById("eventDate");
+
+  if (eventDate) {
+    eventDate.value =
+      iso(new Date());
+  }
+
+
+  /* Aggiungi evento */
+
+  document
+    .getElementById("addEventButton")
+    ?.addEventListener("click", () => {
+
+      const title =
+        document
+          .getElementById("eventTitle")
+          .value.trim();
+
+      const date =
+        document
+          .getElementById("eventDate")
+          .value;
+
+      const time =
+        document
+          .getElementById("eventTime")
+          .value;
+
+      const person =
+        document
+          .getElementById("eventPerson")
+          .value;
+
+      if (!title || !date) return;
+
+      state.events.push({
+        id: Date.now().toString(),
+        title,
+        date,
+        time,
+        person
+      });
+
+      save();
+
+      renderCalendar();
+
+    });
+
+
+  /* Aggiunta rapida dal giorno */
+
+  el
+    .querySelectorAll("[data-add-event]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const date =
+          button.dataset.addEvent;
+
+        document
+          .getElementById("eventDate")
+          .value = date;
+
+        document
+          .getElementById("eventTitle")
+          .focus();
+
+      });
+
+    });
+
+
+  /* Eliminazione evento */
+
+  el
+    .querySelectorAll("[data-delete-event]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const id =
+          button.dataset.deleteEvent;
+
+        state.events =
+          state.events.filter(
+            event => event.id !== id
+          );
+
+        save();
+
+        renderCalendar();
+
+      });
+
+    });
+
+}
+
+
+/* =========================================================
+   NOTE
+   ========================================================= */
+
+function renderNotes() {
+
+  const el =
+    document.getElementById("notes");
+
+  if (!el) return;
+
+  let html = `
+    <div class="section-header">
+
+      <h2>
+        Note
+      </h2>
+
+    </div>
+
+    <div class="notes-add">
+
+      <textarea
+        id="noteText"
+        placeholder="Scrivi una nota..."
+      ></textarea>
+
+      <button id="addNote">
+        Aggiungi nota
+      </button>
+
+    </div>
+
+    <div class="notes-list">
+  `;
+
+  if (!state.notes.length) {
+
+    html += `
+      <div class="empty-message">
+        Nessuna nota
+      </div>
+    `;
+
+  }
+
+  state.notes.forEach((note, index) => {
+
+    html += `
+      <div class="note-card">
+
+        <div>
+          ${escapeHtml(note.text)}
+        </div>
+
+        <button
+          data-delete-note="${index}"
+        >
+          ×
+        </button>
+
+      </div>
+    `;
+
+  });
+
+  html += `
+    </div>
+  `;
+
+  el.innerHTML = html;
+
+
+  document
+    .getElementById("addNote")
+    ?.addEventListener("click", () => {
+
+      const input =
+        document.getElementById("noteText");
+
+      const text =
+        input.value.trim();
+
+      if (!text) return;
+
+      state.notes.unshift({
+        text,
+        createdAt: new Date().toISOString()
+      });
+
+      save();
+
+      renderNotes();
+
+    });
+
+
+  el
+    .querySelectorAll("[data-delete-note]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const index =
+          Number(button.dataset.deleteNote);
+
+        state.notes.splice(index, 1);
+
+        save();
+
+        renderNotes();
+
+      });
+
+    });
+
+}
+
+
+/* =========================================================
+   RICETTE
+   ========================================================= */
+
+function renderRecipes() {
+
+  const el =
+    document.getElementById("recipes");
+
+  if (!el) return;
+
+  let html = `
+    <div class="section-header">
+
+      <h2>
+        Ricette
+      </h2>
+
+    </div>
+
+    <div class="recipe-add">
+
+      <input
+        id="recipeTitle"
+        placeholder="Nome della ricetta"
+      >
+
+      <textarea
+        id="recipeText"
+        placeholder="Ingredienti e preparazione..."
+      ></textarea>
+
+      <button id="addRecipe">
+        Salva ricetta
+      </button>
+
+    </div>
+
+    <div class="recipes-list">
+  `;
+
+  if (!state.recipes.length) {
+
+    html += `
+      <div class="empty-message">
+        Nessuna ricetta
+      </div>
+    `;
+
+  }
+
+  state.recipes.forEach((recipe, index) => {
+
+    html += `
+      <article class="recipe-card">
+
+        <h3>
+          ${escapeHtml(recipe.title)}
+        </h3>
+
+        <div>
+          ${escapeHtml(recipe.text).replace(/\n/g, "<br>")}
+        </div>
+
+        <button
+          data-delete-recipe="${index}"
+        >
+          Elimina
+        </button>
+
+      </article>
+    `;
+
+  });
+
+  html += `
+    </div>
+  `;
+
+  el.innerHTML = html;
+
+
+  document
+    .getElementById("addRecipe")
+    ?.addEventListener("click", () => {
+
+      const title =
+        document
+          .getElementById("recipeTitle")
+          .value.trim();
+
+      const text =
+        document
+          .getElementById("recipeText")
+          .value.trim();
+
+      if (!title) return;
+
+      state.recipes.unshift({
+        title,
+        text
+      });
+
+      save();
+
+      renderRecipes();
+
+    });
+
+
+  el
+    .querySelectorAll("[data-delete-recipe]")
+    .forEach(button => {
+
+      button.addEventListener("click", () => {
+
+        const index =
+          Number(button.dataset.deleteRecipe);
+
+        state.recipes.splice(index, 1);
+
+        save();
+
+        renderRecipes();
+
+      });
+
+    });
+
+}
+
+
+/* =========================================================
+   FUNZIONI UTILI
+   ========================================================= */
+
+function capitalize(text) {
+
+  if (!text) return "";
+
+  return text.charAt(0).toUpperCase()
+    + text.slice(1);
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+function openModal(content) {
+
+  const modal =
+    document.getElementById("modal");
+
+  if (!modal) return;
+
+  modal.innerHTML = content;
+
+  modal.classList.add("active");
+
+}
+
+
+function closeModal() {
+
+  const modal =
+    document.getElementById("modal");
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+
+  modal.innerHTML = "";
+
+}
+
+
+/* =========================================================
+   RENDER COMPLETO
+   ========================================================= */
+
+function renderAll() {
+
+  renderHome();
+  renderMenu();
+  renderShopping();
+  renderCalendar();
+  renderNotes();
+  renderRecipes();
+
+}
+
+
+/* =========================================================
+   AVVIO APP
+   ========================================================= */
+
+document.body.style.visibility = "hidden";
+
+
+initAuth();
+
+
+/* =========================================================
+   SERVICE WORKER
+   ========================================================= */
+
+if ("serviceWorker" in navigator) {
+
+  window.addEventListener("load", () => {
+
+    navigator.serviceWorker
+      .register("service-worker.js")
+      .catch(error => {
+        console.error(
+          "Service Worker:",
+          error
+        );
+      });
+
+  });
+
+}
