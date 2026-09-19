@@ -1,3 +1,78 @@
+/* ===== AUTENTICAZIONE SUPABASE ===== */
+document.body.style.visibility = "hidden";
+const authBox = document.createElement("div");
+authBox.id = "authBox";
+authBox.style.cssText = `
+  position:fixed;
+  inset:0;
+  background:#f8f5f2;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+  font-family:Arial,sans-serif;
+`;
+authBox.innerHTML = `
+  <div style="
+    width:min(90%,380px);
+    background:white;
+    padding:32px;
+    border-radius:20px;
+    box-shadow:0 8px 30px rgba(0,0,0,.10);
+    text-align:center;
+  ">
+    <h1 style="margin-top:0">Casa Familiare</h1>
+    <p>Accedi per entrare nell'app</p>
+    <input id="authEmail" type="email"
+      placeholder="Email"
+      style="width:100%;box-sizing:border-box;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
+    <input id="authPassword" type="password"
+      placeholder="Password"
+      style="width:100%;box-sizing:border-box;padding:13px;margin:8px 0;border:1px solid #ddd;border-radius:10px">
+    <button id="authLogin"
+      style="width:100%;padding:13px;margin-top:12px;border:0;border-radius:10px;background:#7ea8d8;color:white;font-size:16px;cursor:pointer">
+      Accedi
+    </button>
+    <p id="authMessage" style="margin-top:15px;font-size:14px"></p>
+  </div>
+`;
+document.body.appendChild(authBox);
+async function checkAuth() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    authBox.remove();
+    document.body.style.visibility = "visible";
+    renderAll();
+  } else {
+    document.body.style.visibility = "visible";
+    authBox.style.display = "flex";
+  }
+}
+document.getElementById("authLogin").onclick = async () => {
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const message = document.getElementById("authMessage");
+
+  if (!email || !password) {
+    message.textContent = "Inserisci email e password.";
+    return;
+  }
+  message.textContent = "Accesso in corso...";
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+  if (error) {
+    message.textContent = "Email o password non corrette.";
+    console.error(error);
+    return;
+  }
+  authBox.remove();
+  document.body.style.visibility = "visible";
+  renderAll();
+};
+checkAuth();
+/* ===== FINE AUTENTICAZIONE ===== */
 const PEOPLE={francesca:{name:"Francesca",color:"#e98b96"},alessio:{name:"Alessio",color:"#7ea8d8"},sara:{name:"Sara",color:"#e99bc1"},vera:{name:"Vera",color:"#82bd96"},famiglia:{name:"Famiglia",color:"#aa8bc9"}};
 const SHOP_CATS=["dispensa","frutta e verdura","banco frigo","surgelati","farmaci","detersivi","macelleria","salumeria","pescheria"],DAYS=["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"],FMEALS=["Colazione","Spuntino","Pranzo","Merenda","Cena"],FKEY=["colazione","spuntino","pranzo","merenda","cena"],AKEY=["pranzo","cena"];
 const KEY="casa_familiare_v1";let state=JSON.parse(localStorage.getItem(KEY)||"null")||{menus:{},shopping:{},events:[],notes:[],recipes:[]},menuOffset=0,shopOffset=0,calDate=new Date();
