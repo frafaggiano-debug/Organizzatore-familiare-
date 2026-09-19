@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#fff8f3"><link rel="manifest" href="manifest.json"><link rel="stylesheet" href="style.css">
+<title>Casa Familiare</title>
+</head>
+<body>
+<header class="topbar"><div><p class="eyebrow">LA NOSTRA CASA</p><h1>Casa Familiare <span>♥</span></h1></div><button class="icon-btn" id="todayBtn">Oggi</button></header>
+<main>
+<section id="home" class="screen active">
+<div class="hero-card"><div><p class="eyebrow">TUTTO SOTTO CONTROLLO</p><h2>Una casa, tante cose da ricordare.</h2><p>Menu, spesa, impegni, note e ricette in un unico posto.</p></div><div class="hero-heart">♥</div></div>
+<div class="section-title"><h3>Questa settimana</h3><span id="homeWeek"></span></div>
+<div class="grid-2">
+<button class="summary-card" data-go="menu"><span class="card-icon">🍽️</span><strong>Menu di oggi</strong><small id="todayMenuSummary">—</small></button>
+<button class="summary-card" data-go="shopping"><span class="card-icon">🛒</span><strong>Spesa</strong><small id="shoppingSummary">—</small></button>
+<button class="summary-card" data-go="calendar"><span class="card-icon">📅</span><strong>Prossimi impegni</strong><small id="eventsSummary">—</small></button>
+<button class="summary-card" data-go="notes"><span class="card-icon">📝</span><strong>Note</strong><small id="notesSummary">—</small></button>
+</div>
+<button class="wide-card" data-go="recipes"><span>📖</span><div><strong>Ricette</strong><small>Le ricette che usiamo più spesso</small></div><b>›</b></button>
+</section>
+
+<section id="menu" class="screen">
+<div class="section-head"><div><p class="eyebrow">ORGANIZZAZIONE</p><h2>Menu settimanale</h2></div><button class="secondary-btn" id="copyMenuBtn">Copia settimana precedente</button></div>
+<div class="week-nav"><button id="menuPrev">‹</button><strong id="menuWeekLabel"></strong><button id="menuNext">›</button></div><div id="menuContent"></div>
+</section>
+
+<section id="shopping" class="screen">
+<div class="section-head"><div><p class="eyebrow">ORGANIZZAZIONE</p><h2>Lista della spesa</h2></div><button class="secondary-btn" id="copyShoppingBtn">Copia precedente</button></div>
+<div class="week-nav"><button id="shopPrev">‹</button><strong id="shopWeekLabel"></strong><button id="shopNext">›</button></div>
+<div class="add-row"><input id="shoppingInput" placeholder="Aggiungi un prodotto…"><select id="shoppingCategory"></select><button class="primary-btn" id="addShoppingBtn">+</button></div>
+<div id="shoppingContent"></div><button class="danger-soft" id="clearBoughtBtn">Svuota gli acquistati</button>
+</section>
+
+<section id="calendar" class="screen">
+<div class="section-head"><div><p class="eyebrow">FAMIGLIA</p><h2>Calendario</h2></div><button class="primary-btn" id="addEventBtn">+ Impegno</button></div>
+<div class="legend" id="legend"></div><div class="calendar-nav"><button id="calPrev">‹</button><strong id="calendarTitle"></strong><button id="calNext">›</button></div>
+<div class="calendar-weekdays"><span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span></div>
+<div class="calendar-grid" id="calendarGrid"></div><div id="eventList"></div>
+</section>
+
+<section id="notes" class="screen">
+<div class="section-head"><div><p class="eyebrow">DA RICORDARE</p><h2>Note</h2></div></div>
+<div class="add-row"><input id="noteInput" placeholder="Scrivi una nota o una cosa da fare…"><button class="primary-btn" id="addNoteBtn">+</button></div><div id="notesContent"></div>
+</section>
+
+<section id="recipes" class="screen">
+<div class="section-head"><div><p class="eyebrow">IN CUCINA</p><h2>Ricette</h2></div><button class="primary-btn" id="addRecipeBtn">+ Ricetta</button></div>
+<input class="search" id="recipeSearch" placeholder="Cerca una ricetta…"><div id="recipesContent"></div>
+</section>
+</main>
+<nav class="bottom-nav">
+<button data-go="home" class="nav-item active"><span>⌂</span>Home</button><button data-go="menu" class="nav-item"><span>🍽</span>Menu</button>
+<button data-go="shopping" class="nav-item"><span>🛒</span>Spesa</button><button data-go="calendar" class="nav-item"><span>📅</span>Calendario</button><button data-go="notes" class="nav-item"><span>📝</span>Note</button>
+</nav>
+<div class="modal hidden" id="modal"><div class="modal-card" id="modalCard"></div></div>
+<script src="app.js"></script>
+</body></html>
