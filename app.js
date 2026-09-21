@@ -42,13 +42,17 @@ async function initAuth() {
   }
 }
 
+
 async function loadHousehold() {
 
   const { data: { user }, error: userError } =
     await supabaseClient.auth.getUser();
 
   if (userError || !user) {
-    console.error("Impossibile recuperare l'utente:", userError);
+    console.error(
+      "Impossibile recuperare l'utente:",
+      userError
+    );
     return false;
   }
 
@@ -60,16 +64,23 @@ async function loadHousehold() {
       .single();
 
   if (error || !data) {
-    console.error("Impossibile recuperare la casa:", error);
+    console.error(
+      "Impossibile recuperare la casa:",
+      error
+    );
     return false;
   }
 
   currentHouseholdId = data.household_id;
-alert("Casa collegata correttamente!");
-  console.log("Household caricata:", currentHouseholdId);
+
+  console.log(
+    "Household caricata:",
+    currentHouseholdId
+  );
 
   return true;
 }
+
 
 /* =========================================================
    SCHERMATA LOGIN
@@ -185,61 +196,121 @@ function showLogin() {
 
   document.body.appendChild(authBox);
 
-  const emailInput = document.getElementById("authEmail");
-  const passwordInput = document.getElementById("authPassword");
-  const loginButton = document.getElementById("authLogin");
-  const message = document.getElementById("authMessage");
+  const emailInput =
+    document.getElementById("authEmail");
+
+  const passwordInput =
+    document.getElementById("authPassword");
+
+  const loginButton =
+    document.getElementById("authLogin");
+
+  const message =
+    document.getElementById("authMessage");
+
 
   async function login() {
 
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
+    const email =
+      emailInput.value.trim();
+
+    const password =
+      passwordInput.value;
 
     if (!email || !password) {
-      message.textContent = "Inserisci email e password.";
+      message.textContent =
+        "Inserisci email e password.";
       return;
     }
 
     loginButton.disabled = true;
-    loginButton.textContent = "Accesso in corso...";
+
+    loginButton.textContent =
+      "Accesso in corso...";
+
     message.textContent = "";
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
+
+    const { error } =
+      await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
+
 
     if (error) {
 
-      console.error("Errore login:", error);
+      console.error(
+        "Errore login:",
+        error
+      );
 
       message.textContent =
         "Email o password non corrette.";
 
       loginButton.disabled = false;
-      loginButton.textContent = "Accedi";
+
+      loginButton.textContent =
+        "Accedi";
 
       return;
     }
 
+
+    const householdLoaded =
+      await loadHousehold();
+
+
+    if (!householdLoaded) {
+
+      message.textContent =
+        "Utente autenticato, ma casa non trovata.";
+
+      loginButton.disabled = false;
+
+      loginButton.textContent =
+        "Accedi";
+
+      return;
+    }
+
+
     authBox.remove();
 
     renderAll();
+
   }
 
-  loginButton.addEventListener("click", login);
 
-  passwordInput.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-      login();
-    }
-  });
+  loginButton.addEventListener(
+    "click",
+    login
+  );
 
-  emailInput.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-      login();
+
+  passwordInput.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (event.key === "Enter") {
+        login();
+      }
+
     }
-  });
+  );
+
+
+  emailInput.addEventListener(
+    "keydown",
+    function(event) {
+
+      if (event.key === "Enter") {
+        login();
+      }
+
+    }
+  );
+
 }
 
 
@@ -248,6 +319,7 @@ function showLogin() {
    ========================================================= */
 
 const PEOPLE = {
+
   francesca: {
     name: "Francesca",
     color: "#e98b96"
@@ -272,6 +344,7 @@ const PEOPLE = {
     name: "Famiglia",
     color: "#aa8bc9"
   }
+
 };
 
 
@@ -280,6 +353,7 @@ const PEOPLE = {
    ========================================================= */
 
 const SHOP_CATS = [
+
   "dispensa",
   "frutta e verdura",
   "banco frigo",
@@ -289,9 +363,12 @@ const SHOP_CATS = [
   "macelleria",
   "salumeria",
   "pescheria"
+
 ];
 
+
 const DAYS = [
+
   "Lunedì",
   "Martedì",
   "Mercoledì",
@@ -299,27 +376,37 @@ const DAYS = [
   "Venerdì",
   "Sabato",
   "Domenica"
+
 ];
 
+
 const FMEALS = [
+
   "Colazione",
   "Spuntino",
   "Pranzo",
   "Merenda",
   "Cena"
+
 ];
 
+
 const FKEY = [
+
   "colazione",
   "spuntino",
   "pranzo",
   "merenda",
   "cena"
+
 ];
 
+
 const AKEY = [
+
   "pranzo",
   "cena"
+
 ];
 
 
@@ -327,10 +414,14 @@ const AKEY = [
    STATO APP
    ========================================================= */
 
-const KEY = "casa_familiare_v1";
+const KEY =
+  "casa_familiare_v1";
+
 
 let state =
-  JSON.parse(localStorage.getItem(KEY) || "null")
+  JSON.parse(
+    localStorage.getItem(KEY) || "null"
+  )
   ||
   {
     menus: {},
@@ -340,11 +431,21 @@ let state =
     recipes: []
   };
 
-let currentHouseholdId = null;
 
-let menuOffset = 0;
-let shopOffset = 0;
-let calDate = new Date();
+let currentHouseholdId =
+  null;
+
+
+let menuOffset =
+  0;
+
+
+let shopOffset =
+  0;
+
+
+let calDate =
+  new Date();
 
 
 /* =========================================================
@@ -352,10 +453,12 @@ let calDate = new Date();
    ========================================================= */
 
 const save = () => {
+
   localStorage.setItem(
     KEY,
     JSON.stringify(state)
   );
+
 };
 
 
@@ -373,75 +476,147 @@ const iso = d =>
 
 function renderHome() {
 
-  const el = document.getElementById("home");
+  const el =
+    document.getElementById("home");
 
   if (!el) return;
 
+
   el.innerHTML = `
+
     <div class="home-grid">
 
-      <button class="home-card" data-go="menu">
-        <div class="home-icon">🍽️</div>
-        <div class="home-title">Menu settimanale</div>
+      <button
+        class="home-card"
+        data-go="menu"
+      >
+        <div class="home-icon">
+          🍽️
+        </div>
+
+        <div class="home-title">
+          Menu settimanale
+        </div>
+
         <div class="home-text">
           Organizza i pasti della famiglia
         </div>
+
       </button>
 
-      <button class="home-card" data-go="shopping">
-        <div class="home-icon">🛒</div>
-        <div class="home-title">Lista della spesa</div>
+
+      <button
+        class="home-card"
+        data-go="shopping"
+      >
+        <div class="home-icon">
+          🛒
+        </div>
+
+        <div class="home-title">
+          Lista della spesa
+        </div>
+
         <div class="home-text">
           Tutto quello che serve
         </div>
+
       </button>
 
-      <button class="home-card" data-go="calendar">
-        <div class="home-icon">📅</div>
-        <div class="home-title">Calendario</div>
+
+      <button
+        class="home-card"
+        data-go="calendar"
+      >
+        <div class="home-icon">
+          📅
+        </div>
+
+        <div class="home-title">
+          Calendario
+        </div>
+
         <div class="home-text">
           Impegni e appuntamenti
         </div>
+
       </button>
 
-      <button class="home-card" data-go="notes">
-        <div class="home-icon">📝</div>
-        <div class="home-title">Note</div>
+
+      <button
+        class="home-card"
+        data-go="notes"
+      >
+        <div class="home-icon">
+          📝
+        </div>
+
+        <div class="home-title">
+          Note
+        </div>
+
         <div class="home-text">
           Idee e promemoria
         </div>
+
       </button>
 
-      <button class="home-card" data-go="recipes">
-        <div class="home-icon">📖</div>
-        <div class="home-title">Ricette</div>
+
+      <button
+        class="home-card"
+        data-go="recipes"
+      >
+        <div class="home-icon">
+          📖
+        </div>
+
+        <div class="home-title">
+          Ricette
+        </div>
+
         <div class="home-text">
           Le ricette della famiglia
         </div>
+
       </button>
 
     </div>
+
   `;
 
-  el.querySelectorAll("[data-go]").forEach(button => {
 
-    button.addEventListener("click", () => {
+  el
+    .querySelectorAll("[data-go]")
+    .forEach(button => {
 
-      const target = button.dataset.go;
+      button.addEventListener(
+        "click",
+        () => {
 
-      document
-        .querySelectorAll(".page")
-        .forEach(page => page.classList.remove("active"));
+          const target =
+            button.dataset.go;
 
-      const page = document.getElementById(target);
 
-      if (page) {
-        page.classList.add("active");
-      }
+          document
+            .querySelectorAll(".page")
+            .forEach(page =>
+              page.classList.remove("active")
+            );
+
+
+          const page =
+            document.getElementById(target);
+
+
+          if (page) {
+            page.classList.add("active");
+          }
+
+        }
+      );
 
     });
 
-  });
 }
 
 
@@ -451,137 +626,212 @@ function renderHome() {
 
 function renderMenu() {
 
-  const el = document.getElementById("menu");
+  const el =
+    document.getElementById("menu");
 
   if (!el) return;
 
-  const today = new Date();
 
-  const monday = new Date(today);
+  const today =
+    new Date();
 
-  const day = monday.getDay();
 
-  const diff = day === 0 ? -6 : 1 - day;
+  const monday =
+    new Date(today);
 
-  monday.setDate(monday.getDate() + diff);
+
+  const day =
+    monday.getDay();
+
+
+  const diff =
+    day === 0
+      ? -6
+      : 1 - day;
+
 
   monday.setDate(
-    monday.getDate() + menuOffset * 7
+    monday.getDate() + diff
   );
 
+
+  monday.setDate(
+    monday.getDate() +
+    menuOffset * 7
+  );
+
+
   let html = `
+
     <div class="section-header">
 
-      <button id="menuPrev">‹</button>
+      <button id="menuPrev">
+        ‹
+      </button>
 
       <h2>
         Menu settimanale
       </h2>
 
-      <button id="menuNext">›</button>
+      <button id="menuNext">
+        ›
+      </button>
 
     </div>
+
 
     <div class="menu-grid">
+
   `;
 
-  DAYS.forEach((dayName, index) => {
 
-    const date = new Date(monday);
+  DAYS.forEach(
+    (dayName, index) => {
 
-    date.setDate(
-      monday.getDate() + index
-    );
+      const date =
+        new Date(monday);
 
-    const dateKey = iso(date);
 
-    const menu =
-      state.menus[dateKey] || {};
+      date.setDate(
+        monday.getDate() + index
+      );
 
-    html += `
-      <div class="menu-day">
 
-        <div class="menu-day-title">
-          ${dayName}
-          <span>
-            ${date.getDate()}/${date.getMonth() + 1}
-          </span>
-        </div>
-    `;
+      const dateKey =
+        iso(date);
 
-    FMEALS.forEach((meal, mealIndex) => {
 
-      const key = FKEY[mealIndex];
+      const menu =
+        state.menus[dateKey] || {};
+
 
       html += `
-        <div class="meal-row">
 
-          <div class="meal-name">
-            ${meal}
+        <div class="menu-day">
+
+          <div class="menu-day-title">
+
+            ${dayName}
+
+            <span>
+              ${date.getDate()}/${date.getMonth() + 1}
+            </span>
+
           </div>
 
-          <input
-            class="menu-input"
-            data-date="${dateKey}"
-            data-meal="${key}"
-            value="${escapeHtml(menu[key] || "")}"
-            placeholder="Inserisci..."
-          >
-
-        </div>
       `;
 
-    });
 
-    html += `
-      </div>
-    `;
+      FMEALS.forEach(
+        (meal, mealIndex) => {
 
-  });
+          const key =
+            FKEY[mealIndex];
+
+
+          html += `
+
+            <div class="meal-row">
+
+              <div class="meal-name">
+                ${meal}
+              </div>
+
+
+              <input
+                class="menu-input"
+                data-date="${dateKey}"
+                data-meal="${key}"
+                value="${escapeHtml(menu[key] || "")}"
+                placeholder="Inserisci..."
+              >
+
+            </div>
+
+          `;
+
+        }
+      );
+
+
+      html += `
+
+        </div>
+
+      `;
+
+    }
+  );
+
 
   html += `
+
     </div>
+
   `;
 
-  el.innerHTML = html;
+
+  el.innerHTML =
+    html;
+
 
   document
     .getElementById("menuPrev")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      menuOffset--;
-      renderMenu();
+        menuOffset--;
 
-    });
+        renderMenu();
+
+      }
+    );
+
 
   document
     .getElementById("menuNext")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      menuOffset++;
-      renderMenu();
+        menuOffset++;
 
-    });
+        renderMenu();
+
+      }
+    );
+
 
   el
     .querySelectorAll(".menu-input")
     .forEach(input => {
 
-      input.addEventListener("change", () => {
+      input.addEventListener(
+        "change",
+        () => {
 
-        const date = input.dataset.date;
-        const meal = input.dataset.meal;
+          const date =
+            input.dataset.date;
 
-        if (!state.menus[date]) {
-          state.menus[date] = {};
+
+          const meal =
+            input.dataset.meal;
+
+
+          if (!state.menus[date]) {
+            state.menus[date] = {};
+          }
+
+
+          state.menus[date][meal] =
+            input.value.trim();
+
+
+          save();
+
         }
-
-        state.menus[date][meal] =
-          input.value.trim();
-
-        save();
-
-      });
+      );
 
     });
 
@@ -594,111 +844,149 @@ function renderMenu() {
 
 function renderShopping() {
 
-  const el = document.getElementById("shopping");
+  const el =
+    document.getElementById("shopping");
 
   if (!el) return;
 
+
   let html = `
+
     <div class="section-header">
 
-      <button id="shopPrev">‹</button>
+      <button id="shopPrev">
+        ‹
+      </button>
 
       <h2>
         Lista della spesa
       </h2>
 
-      <button id="shopNext">›</button>
+      <button id="shopNext">
+        ›
+      </button>
 
     </div>
 
+
     <div class="shopping-container">
+
   `;
 
-  SHOP_CATS.forEach(cat => {
 
-    const items =
-      state.shopping[cat] || [];
+  SHOP_CATS.forEach(
+    cat => {
 
-    html += `
-      <section class="shopping-category">
+      const items =
+        state.shopping[cat] || [];
 
-        <h3>
-          ${capitalize(cat)}
-        </h3>
-
-        <div class="shopping-add">
-
-          <input
-            id="shopInput-${cat}"
-            placeholder="Aggiungi prodotto..."
-          >
-
-          <button
-            data-add-shop="${cat}"
-          >
-            +
-          </button>
-
-        </div>
-
-        <div class="shopping-items">
-    `;
-
-    if (!items.length) {
 
       html += `
-        <div class="empty-message">
-          Nessun prodotto
-        </div>
+
+        <section class="shopping-category">
+
+          <h3>
+            ${capitalize(cat)}
+          </h3>
+
+
+          <div class="shopping-add">
+
+            <input
+              id="shopInput-${cat}"
+              placeholder="Aggiungi prodotto..."
+            >
+
+
+            <button
+              data-add-shop="${cat}"
+            >
+              +
+            </button>
+
+          </div>
+
+
+          <div class="shopping-items">
+
+      `;
+
+
+      if (!items.length) {
+
+        html += `
+
+          <div class="empty-message">
+            Nessun prodotto
+          </div>
+
+        `;
+
+      }
+
+
+      items.forEach(
+        (item, index) => {
+
+          html += `
+
+            <div class="shopping-item">
+
+              <label>
+
+                <input
+                  type="checkbox"
+                  data-shop-check="${cat}"
+                  data-index="${index}"
+                  ${item.done ? "checked" : ""}
+                >
+
+
+                <span
+                  class="${item.done ? "done" : ""}"
+                >
+                  ${escapeHtml(item.name)}
+                </span>
+
+              </label>
+
+
+              <button
+                data-shop-delete="${cat}"
+                data-index="${index}"
+              >
+                ×
+              </button>
+
+            </div>
+
+          `;
+
+        }
+      );
+
+
+      html += `
+
+          </div>
+
+        </section>
+
       `;
 
     }
+  );
 
-    items.forEach((item, index) => {
-
-      html += `
-        <div class="shopping-item">
-
-          <label>
-
-            <input
-              type="checkbox"
-              data-shop-check="${cat}"
-              data-index="${index}"
-              ${item.done ? "checked" : ""}
-            >
-
-            <span class="${item.done ? "done" : ""}">
-              ${escapeHtml(item.name)}
-            </span>
-
-          </label>
-
-          <button
-            data-shop-delete="${cat}"
-            data-index="${index}"
-          >
-            ×
-          </button>
-
-        </div>
-      `;
-
-    });
-
-    html += `
-        </div>
-
-      </section>
-    `;
-
-  });
 
   html += `
+
     </div>
+
   `;
 
-  el.innerHTML = html;
+
+  el.innerHTML =
+    html;
 
 
   /* Aggiunta prodotto */
@@ -707,33 +995,49 @@ function renderShopping() {
     .querySelectorAll("[data-add-shop]")
     .forEach(button => {
 
-      button.addEventListener("click", () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-        const cat =
-          button.dataset.addShop;
+          const cat =
+            button.dataset.addShop;
 
-        const input =
-          document.getElementById(
-            `shopInput-${cat}`
-          );
 
-        if (!input.value.trim()) return;
+          const input =
+            document.getElementById(
+              `shopInput-${cat}`
+            );
 
-        if (!state.shopping[cat]) {
-          state.shopping[cat] = [];
+
+          if (!input.value.trim()) return;
+
+
+          if (!state.shopping[cat]) {
+            state.shopping[cat] = [];
+          }
+
+
+          state.shopping[cat].push({
+
+            name:
+              input.value.trim(),
+
+            done:
+              false
+
+          });
+
+
+          input.value =
+            "";
+
+
+          save();
+
+          renderShopping();
+
         }
-
-        state.shopping[cat].push({
-          name: input.value.trim(),
-          done: false
-        });
-
-        input.value = "";
-
-        save();
-        renderShopping();
-
-      });
+      );
 
     });
 
@@ -744,22 +1048,28 @@ function renderShopping() {
     .querySelectorAll("[data-shop-check]")
     .forEach(check => {
 
-      check.addEventListener("change", () => {
+      check.addEventListener(
+        "change",
+        () => {
 
-        const cat =
-          check.dataset.shopCheck;
+          const cat =
+            check.dataset.shopCheck;
 
-        const index =
-          Number(check.dataset.index);
 
-        state.shopping[cat][index].done =
-          check.checked;
+          const index =
+            Number(check.dataset.index);
 
-        save();
 
-        renderShopping();
+          state.shopping[cat][index].done =
+            check.checked;
 
-      });
+
+          save();
+
+          renderShopping();
+
+        }
+      );
 
     });
 
@@ -770,42 +1080,60 @@ function renderShopping() {
     .querySelectorAll("[data-shop-delete]")
     .forEach(button => {
 
-      button.addEventListener("click", () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-        const cat =
-          button.dataset.shopDelete;
+          const cat =
+            button.dataset.shopDelete;
 
-        const index =
-          Number(button.dataset.index);
 
-        state.shopping[cat].splice(index, 1);
+          const index =
+            Number(button.dataset.index);
 
-        save();
 
-        renderShopping();
+          state.shopping[cat].splice(
+            index,
+            1
+          );
 
-      });
+
+          save();
+
+          renderShopping();
+
+        }
+      );
 
     });
 
 
   document
     .getElementById("shopPrev")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      shopOffset--;
-      renderShopping();
+        shopOffset--;
 
-    });
+        renderShopping();
+
+      }
+    );
+
 
   document
     .getElementById("shopNext")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      shopOffset++;
-      renderShopping();
+        shopOffset++;
 
-    });
+        renderShopping();
+
+      }
+    );
 
 }
 
@@ -821,17 +1149,30 @@ function renderCalendar() {
 
   if (!el) return;
 
+
   const year =
     calDate.getFullYear();
+
 
   const month =
     calDate.getMonth();
 
+
   const first =
-    new Date(year, month, 1);
+    new Date(
+      year,
+      month,
+      1
+    );
+
 
   const last =
-    new Date(year, month + 1, 0);
+    new Date(
+      year,
+      month + 1,
+      0
+    );
+
 
   const monthName =
     first.toLocaleDateString(
@@ -842,34 +1183,51 @@ function renderCalendar() {
       }
     );
 
+
   let html = `
+
     <div class="section-header">
 
-      <button id="calPrev">‹</button>
+      <button id="calPrev">
+        ‹
+      </button>
 
       <h2>
         ${capitalize(monthName)}
       </h2>
 
-      <button id="calNext">›</button>
+      <button id="calNext">
+        ›
+      </button>
 
     </div>
 
+
     <div class="calendar-grid">
+
   `;
+
 
   const startDay =
     first.getDay() === 0
       ? 6
       : first.getDay() - 1;
 
-  for (let i = 0; i < startDay; i++) {
+
+  for (
+    let i = 0;
+    i < startDay;
+    i++
+  ) {
 
     html += `
+
       <div class="calendar-empty"></div>
+
     `;
 
   }
+
 
   for (
     let day = 1;
@@ -878,65 +1236,88 @@ function renderCalendar() {
   ) {
 
     const date =
-      new Date(year, month, day);
+      new Date(
+        year,
+        month,
+        day
+      );
+
 
     const dateKey =
       iso(date);
 
+
     const events =
       state.events.filter(
-        event => event.date === dateKey
+        event =>
+          event.date === dateKey
       );
 
+
     html += `
+
       <div class="calendar-day">
 
         <div class="calendar-day-number">
           ${day}
         </div>
 
+
         <div class="calendar-events">
+
     `;
 
-    events.forEach((event, index) => {
 
-      const person =
-        PEOPLE[event.person] ||
-        PEOPLE.famiglia;
+    events.forEach(
+      event => {
 
-      html += `
-        <div
-          class="calendar-event"
-          style="border-left:4px solid ${person.color}"
-        >
+        const person =
+          PEOPLE[event.person] ||
+          PEOPLE.famiglia;
 
-          <strong>
-            ${escapeHtml(event.title)}
-          </strong>
 
-          ${
-            event.time
-              ? `<small>${escapeHtml(event.time)}</small>`
-              : ""
-          }
+        html += `
 
-          <span>
-            ${person.name}
-          </span>
-
-          <button
-            data-delete-event="${event.id}"
+          <div
+            class="calendar-event"
+            style="border-left:4px solid ${person.color}"
           >
-            ×
-          </button>
 
-        </div>
-      `;
+            <strong>
+              ${escapeHtml(event.title)}
+            </strong>
 
-    });
+
+            ${
+              event.time
+                ? `<small>${escapeHtml(event.time)}</small>`
+                : ""
+            }
+
+
+            <span>
+              ${person.name}
+            </span>
+
+
+            <button
+              data-delete-event="${event.id}"
+            >
+              ×
+            </button>
+
+          </div>
+
+        `;
+
+      }
+    );
+
 
     html += `
+
         </div>
+
 
         <button
           class="add-event"
@@ -945,13 +1326,18 @@ function renderCalendar() {
           +
         </button>
 
+
       </div>
+
     `;
 
   }
 
+
   html += `
+
     </div>
+
 
     <div class="calendar-form">
 
@@ -959,20 +1345,24 @@ function renderCalendar() {
         Aggiungi impegno
       </h3>
 
+
       <input
         id="eventTitle"
         placeholder="Titolo"
       >
+
 
       <input
         id="eventDate"
         type="date"
       >
 
+
       <input
         id="eventTime"
         type="time"
       >
+
 
       <select id="eventPerson">
 
@@ -998,41 +1388,52 @@ function renderCalendar() {
 
       </select>
 
+
       <button id="addEventButton">
         Aggiungi
       </button>
 
     </div>
+
   `;
 
-  el.innerHTML = html;
+
+  el.innerHTML =
+    html;
 
 
   /* Navigazione mese */
 
   document
     .getElementById("calPrev")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      calDate.setMonth(
-        calDate.getMonth() - 1
-      );
+        calDate.setMonth(
+          calDate.getMonth() - 1
+        );
 
-      renderCalendar();
+        renderCalendar();
 
-    });
+      }
+    );
+
 
   document
     .getElementById("calNext")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      calDate.setMonth(
-        calDate.getMonth() + 1
-      );
+        calDate.setMonth(
+          calDate.getMonth() + 1
+        );
 
-      renderCalendar();
+        renderCalendar();
 
-    });
+      }
+    );
 
 
   /* Data predefinita */
@@ -1040,9 +1441,12 @@ function renderCalendar() {
   const eventDate =
     document.getElementById("eventDate");
 
+
   if (eventDate) {
+
     eventDate.value =
       iso(new Date());
+
   }
 
 
@@ -1050,43 +1454,57 @@ function renderCalendar() {
 
   document
     .getElementById("addEventButton")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      const title =
-        document
-          .getElementById("eventTitle")
-          .value.trim();
+        const title =
+          document
+            .getElementById("eventTitle")
+            .value
+            .trim();
 
-      const date =
-        document
-          .getElementById("eventDate")
-          .value;
 
-      const time =
-        document
-          .getElementById("eventTime")
-          .value;
+        const date =
+          document
+            .getElementById("eventDate")
+            .value;
 
-      const person =
-        document
-          .getElementById("eventPerson")
-          .value;
 
-      if (!title || !date) return;
+        const time =
+          document
+            .getElementById("eventTime")
+            .value;
 
-      state.events.push({
-        id: Date.now().toString(),
-        title,
-        date,
-        time,
-        person
-      });
 
-      save();
+        const person =
+          document
+            .getElementById("eventPerson")
+            .value;
 
-      renderCalendar();
 
-    });
+        if (!title || !date) return;
+
+
+        state.events.push({
+
+          id:
+            Date.now().toString(),
+
+          title,
+          date,
+          time,
+          person
+
+        });
+
+
+        save();
+
+        renderCalendar();
+
+      }
+    );
 
 
   /* Aggiunta rapida dal giorno */
@@ -1095,20 +1513,26 @@ function renderCalendar() {
     .querySelectorAll("[data-add-event]")
     .forEach(button => {
 
-      button.addEventListener("click", () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-        const date =
-          button.dataset.addEvent;
+          const date =
+            button.dataset.addEvent;
 
-        document
-          .getElementById("eventDate")
-          .value = date;
 
-        document
-          .getElementById("eventTitle")
-          .focus();
+          document
+            .getElementById("eventDate")
+            .value =
+            date;
 
-      });
+
+          document
+            .getElementById("eventTitle")
+            .focus();
+
+        }
+      );
 
     });
 
@@ -1119,21 +1543,27 @@ function renderCalendar() {
     .querySelectorAll("[data-delete-event]")
     .forEach(button => {
 
-      button.addEventListener("click", () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-        const id =
-          button.dataset.deleteEvent;
+          const id =
+            button.dataset.deleteEvent;
 
-        state.events =
-          state.events.filter(
-            event => event.id !== id
-          );
 
-        save();
+          state.events =
+            state.events.filter(
+              event =>
+                event.id !== id
+            );
 
-        renderCalendar();
 
-      });
+          save();
+
+          renderCalendar();
+
+        }
+      );
 
     });
 
@@ -1151,7 +1581,9 @@ function renderNotes() {
 
   if (!el) return;
 
+
   let html = `
+
     <div class="section-header">
 
       <h2>
@@ -1160,6 +1592,7 @@ function renderNotes() {
 
     </div>
 
+
     <div class="notes-add">
 
       <textarea
@@ -1167,92 +1600,132 @@ function renderNotes() {
         placeholder="Scrivi una nota..."
       ></textarea>
 
+
       <button id="addNote">
         Aggiungi nota
       </button>
 
     </div>
 
+
     <div class="notes-list">
+
   `;
+
 
   if (!state.notes.length) {
 
     html += `
+
       <div class="empty-message">
         Nessuna nota
       </div>
+
     `;
 
   }
 
-  state.notes.forEach((note, index) => {
 
-    html += `
-      <div class="note-card">
+  state.notes.forEach(
+    (note, index) => {
 
-        <div>
-          ${escapeHtml(note.text)}
+      html += `
+
+        <div class="note-card">
+
+          <div>
+            ${escapeHtml(note.text)}
+          </div>
+
+
+          <button
+            data-delete-note="${index}"
+          >
+            ×
+          </button>
+
         </div>
 
-        <button
-          data-delete-note="${index}"
-        >
-          ×
-        </button>
+      `;
 
-      </div>
-    `;
+    }
+  );
 
-  });
 
   html += `
+
     </div>
+
   `;
 
-  el.innerHTML = html;
+
+  el.innerHTML =
+    html;
 
 
   document
     .getElementById("addNote")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      const input =
-        document.getElementById("noteText");
+        const input =
+          document.getElementById(
+            "noteText"
+          );
 
-      const text =
-        input.value.trim();
 
-      if (!text) return;
+        const text =
+          input.value.trim();
 
-      state.notes.unshift({
-        text,
-        createdAt: new Date().toISOString()
-      });
 
-      save();
+        if (!text) return;
 
-      renderNotes();
 
-    });
+        state.notes.unshift({
+
+          text,
+
+          createdAt:
+            new Date().toISOString()
+
+        });
+
+
+        save();
+
+        renderNotes();
+
+      }
+    );
 
 
   el
     .querySelectorAll("[data-delete-note]")
     .forEach(button => {
 
-      button.addEventListener("click", () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-        const index =
-          Number(button.dataset.deleteNote);
+          const index =
+            Number(
+              button.dataset.deleteNote
+            );
 
-        state.notes.splice(index, 1);
 
-        save();
+          state.notes.splice(
+            index,
+            1
+          );
 
-        renderNotes();
 
-      });
+          save();
+
+          renderNotes();
+
+        }
+      );
 
     });
 
@@ -1270,7 +1743,9 @@ function renderRecipes() {
 
   if (!el) return;
 
+
   let html = `
+
     <div class="section-header">
 
       <h2>
@@ -1279,6 +1754,7 @@ function renderRecipes() {
 
     </div>
 
+
     <div class="recipe-add">
 
       <input
@@ -1286,10 +1762,12 @@ function renderRecipes() {
         placeholder="Nome della ricetta"
       >
 
+
       <textarea
         id="recipeText"
         placeholder="Ingredienti e preparazione..."
       ></textarea>
+
 
       <button id="addRecipe">
         Salva ricetta
@@ -1297,94 +1775,133 @@ function renderRecipes() {
 
     </div>
 
+
     <div class="recipes-list">
+
   `;
+
 
   if (!state.recipes.length) {
 
     html += `
+
       <div class="empty-message">
         Nessuna ricetta
       </div>
+
     `;
 
   }
 
-  state.recipes.forEach((recipe, index) => {
 
-    html += `
-      <article class="recipe-card">
+  state.recipes.forEach(
+    (recipe, index) => {
 
-        <h3>
-          ${escapeHtml(recipe.title)}
-        </h3>
+      html += `
 
-        <div>
-          ${escapeHtml(recipe.text).replace(/\n/g, "<br>")}
-        </div>
+        <article class="recipe-card">
 
-        <button
-          data-delete-recipe="${index}"
-        >
-          Elimina
-        </button>
+          <h3>
+            ${escapeHtml(recipe.title)}
+          </h3>
 
-      </article>
-    `;
 
-  });
+          <div>
+            ${escapeHtml(recipe.text)
+              .replace(/\n/g, "<br>")}
+          </div>
+
+
+          <button
+            data-delete-recipe="${index}"
+          >
+            Elimina
+          </button>
+
+        </article>
+
+      `;
+
+    }
+  );
+
 
   html += `
+
     </div>
+
   `;
 
-  el.innerHTML = html;
+
+  el.innerHTML =
+    html;
 
 
   document
     .getElementById("addRecipe")
-    ?.addEventListener("click", () => {
+    ?.addEventListener(
+      "click",
+      () => {
 
-      const title =
-        document
-          .getElementById("recipeTitle")
-          .value.trim();
+        const title =
+          document
+            .getElementById("recipeTitle")
+            .value
+            .trim();
 
-      const text =
-        document
-          .getElementById("recipeText")
-          .value.trim();
 
-      if (!title) return;
+        const text =
+          document
+            .getElementById("recipeText")
+            .value
+            .trim();
 
-      state.recipes.unshift({
-        title,
-        text
-      });
 
-      save();
+        if (!title) return;
 
-      renderRecipes();
 
-    });
+        state.recipes.unshift({
+
+          title,
+          text
+
+        });
+
+
+        save();
+
+        renderRecipes();
+
+      }
+    );
 
 
   el
     .querySelectorAll("[data-delete-recipe]")
     .forEach(button => {
 
-      button.addEventListener("click", () => {
+      button.addEventListener(
+        "click",
+        () => {
 
-        const index =
-          Number(button.dataset.deleteRecipe);
+          const index =
+            Number(
+              button.dataset.deleteRecipe
+            );
 
-        state.recipes.splice(index, 1);
 
-        save();
+          state.recipes.splice(
+            index,
+            1
+          );
 
-        renderRecipes();
 
-      });
+          save();
+
+          renderRecipes();
+
+        }
+      );
 
     });
 
@@ -1399,8 +1916,12 @@ function capitalize(text) {
 
   if (!text) return "";
 
-  return text.charAt(0).toUpperCase()
-    + text.slice(1);
+
+  return (
+    text.charAt(0).toUpperCase()
+    +
+    text.slice(1)
+  );
 
 }
 
@@ -1408,11 +1929,31 @@ function capitalize(text) {
 function escapeHtml(value) {
 
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -1428,9 +1969,14 @@ function openModal(content) {
 
   if (!modal) return;
 
-  modal.innerHTML = content;
 
-  modal.classList.add("active");
+  modal.innerHTML =
+    content;
+
+
+  modal.classList.add(
+    "active"
+  );
 
 }
 
@@ -1442,9 +1988,14 @@ function closeModal() {
 
   if (!modal) return;
 
-  modal.classList.remove("active");
 
-  modal.innerHTML = "";
+  modal.classList.remove(
+    "active"
+  );
+
+
+  modal.innerHTML =
+    "";
 
 }
 
@@ -1456,10 +2007,15 @@ function closeModal() {
 function renderAll() {
 
   renderHome();
+
   renderMenu();
+
   renderShopping();
+
   renderCalendar();
+
   renderNotes();
+
   renderRecipes();
 
 }
@@ -1469,7 +2025,8 @@ function renderAll() {
    AVVIO APP
    ========================================================= */
 
-document.body.style.visibility = "hidden";
+document.body.style.visibility =
+  "hidden";
 
 
 initAuth();
@@ -1481,17 +2038,22 @@ initAuth();
 
 if ("serviceWorker" in navigator) {
 
-  window.addEventListener("load", () => {
+  window.addEventListener(
+    "load",
+    () => {
 
-    navigator.serviceWorker
-      .register("service-worker.js")
-      .catch(error => {
-        console.error(
-          "Service Worker:",
-          error
-        );
-      });
+      navigator.serviceWorker
+        .register("service-worker.js")
+        .catch(error => {
 
-  });
+          console.error(
+            "Service Worker:",
+            error
+          );
+
+        });
+
+    }
+  );
 
 }
