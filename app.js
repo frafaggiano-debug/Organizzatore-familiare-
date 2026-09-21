@@ -27,6 +27,34 @@ async function initAuth() {
   }
 }
 
+async function loadHousehold() {
+
+  const { data: { user }, error: userError } =
+    await supabaseClient.auth.getUser();
+
+  if (userError || !user) {
+    console.error("Impossibile recuperare l'utente:", userError);
+    return false;
+  }
+
+  const { data, error } =
+    await supabaseClient
+      .from("household_members")
+      .select("household_id")
+      .eq("user_id", user.id)
+      .single();
+
+  if (error || !data) {
+    console.error("Impossibile recuperare la casa:", error);
+    return false;
+  }
+
+  currentHouseholdId = data.household_id;
+
+  console.log("Household caricata:", currentHouseholdId);
+
+  return true;
+}
 
 /* =========================================================
    SCHERMATA LOGIN
