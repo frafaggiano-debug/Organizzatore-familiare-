@@ -10,7 +10,8 @@
 
 async function initAuth() {
 
-  const { data, error } = await supabaseClient.auth.getSession();
+  const { data, error } =
+    await supabaseClient.auth.getSession();
 
   if (error) {
     console.error("Errore controllo sessione:", error);
@@ -19,11 +20,25 @@ async function initAuth() {
   }
 
   if (data.session) {
+
     // Utente già autenticato
+    const householdLoaded =
+      await loadHousehold();
+
+    if (!householdLoaded) {
+      console.error(
+        "Impossibile identificare la casa dell'utente."
+      );
+      return;
+    }
+
     renderAll();
+
   } else {
+
     // Nessun utente autenticato
     showLogin();
+
   }
 }
 
