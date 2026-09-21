@@ -297,6 +297,8 @@ let state =
     recipes: []
   };
 
+let currentHouseholdId = null;
+
 let menuOffset = 0;
 let shopOffset = 0;
 let calDate = new Date();
