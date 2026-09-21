@@ -65,7 +65,7 @@ async function loadHousehold() {
   }
 
   currentHouseholdId = data.household_id;
-
+alert("Casa collegata correttamente!");
   console.log("Household caricata:", currentHouseholdId);
 
   return true;
